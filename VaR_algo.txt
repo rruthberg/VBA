@@ -1,0 +1,59 @@
+Function RRVAR(series As Object, period As Integer, quantileP As Double) As Double
+    'OBS kan prestera dåligt i större serier pga bubblesort, kan implementeras med QuickSort också... :)
+    Application.Calculation = xlCalculationManual
+    Application.Volatile (False)
+    Application.ScreenUpdating = False
+
+    Dim CellRow As Integer, CellCol As Integer, VARindex As Integer, VAR As Double
+    Dim LagCell As String, LagRow As Integer, CurCell As String, NewCell As String
+    Dim rtv() As Double, rtsort() As Double
+    ReDim rtv(period)
+    ReDim rtsort(period)
+    CellRow = series.Row
+    CellCol = series.Column
+    For i = 1 To period
+        rtv(i) = ThisWorkbook.ActiveSheet.Cells(CellRow - i + 1, CellCol).Value
+        Next
+        
+    'Do sorting algorithm:
+    Dim size As Long, changed As Long
+    Dim tmp As Double, nums() As Double
+    Dim k As Long, cycle As Long
+    ReDim nums(1 To period)
+
+    For k = 1 To period
+    nums(k) = rtv(k)
+    Next k
+
+    timer_val = Timer
+
+    Do
+    cycle = cycle + 1
+    changed = 0
+    For k = 1 To period - 1
+        If nums(k) > nums(k + 1) Then
+        tmp = nums(k)
+        nums(k) = nums(k + 1)
+        nums(k + 1) = tmp
+        changed = 1
+        End If
+        Next k
+    Loop Until changed = 0
+    
+    rtsort = nums
+    'end of sorting algo
+  
+    VARindex = Application.WorksheetFunction.Floor(period * quantileP + 1, 1)
+    VAR = rtsort(VARindex)
+    RRVAR = VAR
+    Application.Volatile (True)
+    Application.Calculation = xlCalculationAutomatic
+    Application.ScreenUpdating = True
+End Function
+
+'Gather all points in vector
+'Order vector small to big
+'Get min value st P( return < m) > p    <-> min m s.t Finv(p) < m
+' --> For all m check P(m) > p, take the smallest index that fulfill this criteria
+'OR just take (np+1)th index in ordered vector... so:
+'Order vector - count components =n, get index for (np+1), simple enough
